@@ -2,9 +2,9 @@ pipeline {
     agent any
 
     stages {
-        stage('Build Frontend') {
+        stage('Build Frontend Image') {
             steps {
-                echo 'docker pull danieldi/front'
+                sh 'docker build -t danieldi/front .'
             }
         }
         stage('Test front') {
@@ -12,10 +12,14 @@ pipeline {
                 echo 'testing...'
             }
         }
-        stage('Deploy Front') {
+        stage('Docker Login') {
             steps {
-                echo 'docker run --name font-end --network="my-net" --ip 122.22.0.32 -p 4200:4200 -d danieldi/front'
+                sh 'docker login -u danieldi -p Praxis20221*team7'
             }
         }
+        stage('Push image') {
+            steps {
+                sh 'docker push danieldi/front'
+            }
     }
 }
