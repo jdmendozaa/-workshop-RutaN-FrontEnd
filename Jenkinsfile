@@ -21,5 +21,5 @@ pipeline {
             steps {
                 sh 'docker push danieldi/front'
             }
-    }
+        }
 }
