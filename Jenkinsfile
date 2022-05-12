@@ -4,17 +4,17 @@ pipeline {
     stages {
         stage('Build Frontend') {
             steps {
-                echo 'Building..'
+                echo 'docker pull danieldi/front'
             }
         }
-        stage('Test') {
+        stage('Test front') {
             steps {
-                echo 'Testing..'
+                echo 'testing...'
             }
         }
-        stage('Deploy') {
+        stage('Deploy Front') {
             steps {
-                echo 'Deploying....'
+                echo 'docker run --name font-end --network="my-net" --ip 122.22.0.32 -p 4200:4200 -d danieldi/front'
             }
         }
     }
