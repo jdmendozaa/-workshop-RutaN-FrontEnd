@@ -1,4 +1,5 @@
 node {
+    
     stage('Get a changes'){
         git url:'https://github.com/DanielDi/praxis-gildedrose', branch:'main'
     }
