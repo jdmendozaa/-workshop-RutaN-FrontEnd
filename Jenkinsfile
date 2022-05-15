@@ -1,6 +1,6 @@
 node {
     stage('Get a changes'){
-        git url:'https://github.com/DanielDi/praxis-gildedrose', branch:'main'
+        git url:'https://github.com/jsapuyesp/praxis-FE', branch:'main'
     }
     stage('Build Frontend Image') {
         sh 'docker build -t danieldi/front .'
