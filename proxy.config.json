@@ -1,6 +1,6 @@
 {
   "/api/": {
-    "target" :"http://122.22.0.22:8080",
+    "target" :"172.17.0.2:8080",
     "secure": false,
     "logLevel": "debug"
   }
