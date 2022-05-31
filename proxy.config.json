@@ -1,6 +1,6 @@
 {
   "/api/": {
-    "target" :"http://${BACKEND_HOST}:8080",
+    "target" :"http://172.12.02:8080",
     "secure": false,
     "logLevel": "debug"
   }
