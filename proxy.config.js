@@ -1,4 +1,4 @@
-const PROXI_CONFIG = {
+const PROXY_CONFIG = {
   "/api/": {
     "target" :"http://"+process.env.BACKEND_HOST+":8080",
     "secure": false,
@@ -6,5 +6,5 @@ const PROXI_CONFIG = {
   }
 }
 
-module.export = PROXI_CONFIG;
+module.exports = PROXY_CONFIG;
 
