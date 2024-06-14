@@ -3,7 +3,9 @@ package http
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"net"
+	"strconv"
 	"strings"
 )
 
@@ -37,14 +39,22 @@ func Unmarshal(conn net.Conn) (*Message, error) {
 		// We create a map with each element of the header
 		headers[strings.TrimSpace(header[0])] = strings.TrimSpace(header[1])
 	}
+	body := ""
+	if bodyLength, ok := headers["Content-Length"]; ok {
+		bodyLengthI, err := strconv.Atoi(bodyLength)
+		if err != nil {
+			return nil, err
+		}
+		bodyB, _ := reader.Peek(bodyLengthI)
+		body = string(bodyB)
+	}
 
 	httpMessage := Message{
 		Method:      statusArr[0],
 		URL:         statusArr[1],
 		HTTPVersion: statusArr[2],
 		Headers:     headers,
-		// For now, I don't care about the body
-		Body: "",
+		Body:        body,
 	}
 
 	return &httpMessage, nil
@@ -85,4 +95,9 @@ func (httpMessage *Message) SetStatus(status int) *Message {
 	httpMessage.StatusCode = status
 	httpMessage.StatusText = StatusCode[status]
 	return httpMessage
+}
+
+func (httpMessage *Message) Write(conn io.Writer) {
+	message, _ := httpMessage.Marshal()
+	conn.Write(message)
 }
