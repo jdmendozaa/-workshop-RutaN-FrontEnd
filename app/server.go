@@ -79,5 +79,4 @@ func HandleRequest(conn net.Conn) {
 		message, _ := responseMessage.Marshal()
 		conn.Write(message)
 	}
-	conn.Close()
 }
