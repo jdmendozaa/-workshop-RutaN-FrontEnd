@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
 	"net"
 	"os"
@@ -24,34 +23,24 @@ func main() {
 		os.Exit(1)
 	}
 
-	reader := bufio.NewReader(conn)
-	status, err := reader.ReadString('\n')
-	path := strings.Fields(status)[1]
-	headers := make(map[string]string)
-	for {
-		line, err := reader.ReadString('\n')
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-		if strings.TrimSpace(line) == "" {
-			break
-		}
-		header := strings.Split(line, ":")
-		// We create a map with each element of the header
-		headers[strings.TrimSpace(header[0])] = strings.TrimSpace(header[1])
-	}
+	HandleRequest(conn)
+}
+
+func HandleRequest(conn net.Conn) {
+	httpMessage := HTTPMessage{}
+	httpMessage.Unmarshal(conn)
+
+	fmt.Printf("%+v\n", httpMessage)
 
 	echoPrefix := "/echo/"
-	if path == "/" {
+	if httpMessage.Status.URL == "/" {
 		conn.Write([]byte("HTTP/1.1 200 OK\r\n\r\n"))
-	} else if strings.HasPrefix(path, echoPrefix) {
-		text := strings.TrimPrefix(path, echoPrefix)
+	} else if strings.HasPrefix(httpMessage.Status.URL, echoPrefix) {
+		text := strings.TrimPrefix(httpMessage.Status.URL, echoPrefix)
 		response := fmt.Sprintf("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: %v\r\n\r\n%v", len(text), text)
 		conn.Write([]byte(response))
-	} else if path == "/user-agent" {
-		text := headers["User-Agent"]
-		fmt.Println(text)
+	} else if httpMessage.Status.URL == "/user-agent" {
+		text := httpMessage.Headers["User-Agent"]
 		response := fmt.Sprintf("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: %v\r\n\r\n%v", len(text), text)
 		conn.Write([]byte(response))
 	} else {
