@@ -5,6 +5,7 @@ import (
 	"github.com/codecrafters-io/http-server-starter-go/app/http"
 	"net"
 	"os"
+	"path"
 	"strings"
 )
 
@@ -17,6 +18,13 @@ func main() {
 		fmt.Println("Failed to bind to port 4221")
 		os.Exit(1)
 	}
+	filePath := ""
+	if len(os.Args) > 2 {
+		filePath = os.Args[2]
+	}
+
+	fmt.Println("FilePath:", filePath)
+
 	for {
 		conn, err := l.Accept()
 		if err != nil {
@@ -24,59 +32,58 @@ func main() {
 			os.Exit(1)
 		}
 
-		go HandleRequest(conn)
+		go HandleRequest(conn, filePath)
 	}
 }
 
-func HandleRequest(conn net.Conn) {
+func HandleRequest(conn net.Conn, filesDir string) {
 	httpRequest, _ := http.Unmarshal(conn)
 
 	echoPrefix := "/echo/"
+	filePrefix := "/files/"
 	if httpRequest.URL == "/" {
-		responseMessage := http.Message{
-			HTTPVersion: "HTTP/1.1",
-			StatusCode:  200,
-			StatusText:  "OK",
-		}
+		responseMessage := http.NewMessage().SetStatus(200)
 		message, _ := responseMessage.Marshal()
 		conn.Write(message)
 	} else if strings.HasPrefix(httpRequest.URL, echoPrefix) {
 		body := strings.TrimPrefix(httpRequest.URL, echoPrefix)
-		headers := map[string]string{
-			"Content-Type":   "text/plain",
-			"Content-Length": fmt.Sprintf("%v", len(body)),
-		}
-		responseMessage := http.Message{
-			HTTPVersion: "HTTP/1.1",
-			StatusCode:  200,
-			StatusText:  "OK",
-			Headers:     headers,
-			Body:        body,
-		}
+		responseMessage := http.NewMessage().SetStatus(200).SetHeader("Content-Type", "text/plain").SetBody(body)
 		message, _ := responseMessage.Marshal()
 		conn.Write(message)
 	} else if httpRequest.URL == "/user-agent" {
 		body := httpRequest.Headers["User-Agent"]
-		headers := map[string]string{
-			"Content-Type":   "text/plain",
-			"Content-Length": fmt.Sprintf("%v", len(body)),
-		}
-		responseMessage := http.Message{
-			HTTPVersion: "HTTP/1.1",
-			StatusCode:  200,
-			StatusText:  "OK",
-			Headers:     headers,
-			Body:        body,
-		}
+		responseMessage := http.NewMessage().SetStatus(200).SetHeader("Content-Type", "text/plain").SetBody(body)
 		message, _ := responseMessage.Marshal()
 		conn.Write(message)
-	} else {
-		responseMessage := http.Message{
-			HTTPVersion: "HTTP/1.1",
-			StatusCode:  404,
-			StatusText:  "Not Found",
+	} else if strings.HasPrefix(httpRequest.URL, filePrefix) {
+		fileName := strings.TrimPrefix(httpRequest.URL, filePrefix)
+		fullPath := path.Join(filesDir, fileName)
+		content, err := readFile(fullPath)
+		if err != nil {
+			if os.IsNotExist(err) {
+				// Handle the case where the file does not exist
+				responseMessage := http.NewMessage().SetStatus(404)
+				message, _ := responseMessage.Marshal()
+				conn.Write(message)
+			}
+			return
 		}
+		responseMessage := http.NewMessage().SetStatus(200).SetHeader("Content-Type", "application/octet-stream").SetBody(content)
+		message, _ := responseMessage.Marshal()
+		conn.Write(message)
+
+	} else {
+		responseMessage := http.NewMessage().SetStatus(404)
 		message, _ := responseMessage.Marshal()
 		conn.Write(message)
 	}
+}
+
+func readFile(filename string) (string, error) {
+	content, err := os.ReadFile(filename)
+	fmt.Println(len(content))
+	if err != nil {
+		return "", err
+	}
+	return string(content), nil
 }

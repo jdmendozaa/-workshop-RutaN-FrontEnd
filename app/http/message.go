@@ -50,7 +50,7 @@ func Unmarshal(conn net.Conn) (*Message, error) {
 	return &httpMessage, nil
 }
 
-func (httpMessage Message) Marshal() ([]byte, error) {
+func (httpMessage *Message) Marshal() ([]byte, error) {
 	status := fmt.Sprintf("%v %v %v", httpMessage.HTTPVersion, httpMessage.StatusCode, httpMessage.StatusText)
 	// Create headers string
 	var headers string
@@ -59,4 +59,30 @@ func (httpMessage Message) Marshal() ([]byte, error) {
 	}
 	response := fmt.Sprintf("%v\r\n%v\r\n%v", status, headers, httpMessage.Body)
 	return []byte(response), nil
+}
+
+func NewMessage() *Message {
+	httpMessage := Message{
+		HTTPVersion: "HTTP/1.1",
+		Headers:     make(map[string]string),
+	}
+	httpMessage.SetHeader("Content-Length", "0")
+	return &httpMessage
+}
+
+func (httpMessage *Message) SetHeader(key, value string) *Message {
+	httpMessage.Headers[key] = value
+	return httpMessage
+}
+
+func (httpMessage *Message) SetBody(body string) *Message {
+	httpMessage.Body = body
+	httpMessage.SetHeader("Content-Length", fmt.Sprintf("%v", len(body)))
+	return httpMessage
+}
+
+func (httpMessage *Message) SetStatus(status int) *Message {
+	httpMessage.StatusCode = status
+	httpMessage.StatusText = StatusCode[status]
+	return httpMessage
 }
