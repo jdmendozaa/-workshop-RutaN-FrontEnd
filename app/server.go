@@ -28,10 +28,14 @@ func main() {
 	header, err := reader.ReadString('\n')
 	path := strings.Fields(header)[1]
 
+	echoPrefix := "/echo/"
 	if path == "/" {
 		conn.Write([]byte("HTTP/1.1 200 OK\r\n\r\n"))
+	} else if strings.HasPrefix(path, echoPrefix) {
+		text := strings.TrimPrefix(path, echoPrefix)
+		response := fmt.Sprintf("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: %v\r\n\r\n%v", len(text), text)
+		conn.Write([]byte(response))
 	} else {
 		conn.Write([]byte("HTTP/1.1 404 Not Found\r\n\r\n"))
 	}
-
 }
