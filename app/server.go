@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/codecrafters-io/http-server-starter-go/app/http"
 	"net"
 	"os"
 	"strings"
@@ -27,23 +28,54 @@ func main() {
 }
 
 func HandleRequest(conn net.Conn) {
-	httpMessage := HTTPMessage{}
-	httpMessage.Unmarshal(conn)
-
-	fmt.Printf("%+v\n", httpMessage)
+	httpRequest, _ := http.Unmarshal(conn)
 
 	echoPrefix := "/echo/"
-	if httpMessage.Status.URL == "/" {
-		conn.Write([]byte("HTTP/1.1 200 OK\r\n\r\n"))
-	} else if strings.HasPrefix(httpMessage.Status.URL, echoPrefix) {
-		text := strings.TrimPrefix(httpMessage.Status.URL, echoPrefix)
-		response := fmt.Sprintf("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: %v\r\n\r\n%v", len(text), text)
-		conn.Write([]byte(response))
-	} else if httpMessage.Status.URL == "/user-agent" {
-		text := httpMessage.Headers["User-Agent"]
-		response := fmt.Sprintf("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: %v\r\n\r\n%v", len(text), text)
-		conn.Write([]byte(response))
+	if httpRequest.URL == "/" {
+		responseMessage := http.Message{
+			HTTPVersion: "HTTP/1.1",
+			StatusCode:  200,
+			StatusText:  "OK",
+		}
+		message, _ := responseMessage.Marshal()
+		conn.Write(message)
+	} else if strings.HasPrefix(httpRequest.URL, echoPrefix) {
+		body := strings.TrimPrefix(httpRequest.URL, echoPrefix)
+		headers := map[string]string{
+			"Content-Type":   "text/plain",
+			"Content-Length": fmt.Sprintf("%v", len(body)),
+		}
+		responseMessage := http.Message{
+			HTTPVersion: "HTTP/1.1",
+			StatusCode:  200,
+			StatusText:  "OK",
+			Headers:     headers,
+			Body:        body,
+		}
+		message, _ := responseMessage.Marshal()
+		conn.Write(message)
+	} else if httpRequest.URL == "/user-agent" {
+		body := httpRequest.Headers["User-Agent"]
+		headers := map[string]string{
+			"Content-Type":   "text/plain",
+			"Content-Length": fmt.Sprintf("%v", len(body)),
+		}
+		responseMessage := http.Message{
+			HTTPVersion: "HTTP/1.1",
+			StatusCode:  200,
+			StatusText:  "OK",
+			Headers:     headers,
+			Body:        body,
+		}
+		message, _ := responseMessage.Marshal()
+		conn.Write(message)
 	} else {
-		conn.Write([]byte("HTTP/1.1 404 Not Found\r\n\r\n"))
+		responseMessage := http.Message{
+			HTTPVersion: "HTTP/1.1",
+			StatusCode:  404,
+			StatusText:  "Not Found",
+		}
+		message, _ := responseMessage.Marshal()
+		conn.Write(message)
 	}
 }
