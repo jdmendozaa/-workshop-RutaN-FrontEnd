@@ -91,8 +91,15 @@ func (httpMessage *Message) GetHeader(key string) string {
 }
 
 func (httpMessage *Message) SetBody(body string) *Message {
-	httpMessage.Body = body
-	httpMessage.SetHeader("Content-Length", fmt.Sprintf("%v", len(body)))
+	if httpMessage.Encoder != nil {
+		// TODO: Handle errors
+		encodedBody, _ := httpMessage.Encoder.Encode(body)
+		httpMessage.Body = encodedBody
+	} else {
+		fmt.Println("Not Encoding body...")
+		httpMessage.Body = body
+	}
+	httpMessage.SetHeader("Content-Length", fmt.Sprintf("%v", len(httpMessage.Body)))
 	return httpMessage
 }
 
@@ -112,6 +119,8 @@ func (httpMessage *Message) SetEncoder(encoders string) *Message {
 			break
 		}
 	}
+	// In case there's already an uncompressed body, we set it again to compress it.
+	httpMessage.SetBody(httpMessage.Body)
 	return httpMessage
 }
 
