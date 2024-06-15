@@ -38,7 +38,7 @@ func HandleRequest(conn net.Conn, filesDir string) {
 	httpRequest, _ := http.Unmarshal(conn)
 
 	// Handle encoding
-	httpResponse := http.NewMessage().SetEncoder(httpRequest.GetHeader("Accept-Encoding"))
+	httpResponse := http.NewMessage().SetCompressor(httpRequest.GetHeader("Accept-Encoding"))
 
 	if httpRequest.Method == "GET" {
 		handleGet(conn, filesDir, httpRequest, httpResponse)

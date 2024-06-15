@@ -5,17 +5,17 @@ import (
 	"compress/gzip"
 )
 
-type Encoder interface {
-	Encode(body string) (string, error)
+type Compressor interface {
+	Compress(body string) (string, error)
 }
 
-var Encoding = map[string]Encoder{
+var Algorithms = map[string]Compressor{
 	"gzip": Gzip{},
 }
 
 type Gzip struct{}
 
-func (Gzip) Encode(body string) (string, error) {
+func (Gzip) Compress(body string) (string, error) {
 	var b bytes.Buffer
 	gz := gzip.NewWriter(&b)
 	_, err := gz.Write([]byte(body))

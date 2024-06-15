@@ -17,7 +17,7 @@ type Message struct {
 	StatusText  string
 	Headers     map[string]string
 	Body        string
-	Encoder     Encoder
+	Compressor  Compressor
 }
 
 func Unmarshal(conn net.Conn) (*Message, error) {
@@ -30,7 +30,6 @@ func Unmarshal(conn net.Conn) (*Message, error) {
 	for {
 		line, err := reader.ReadString('\n')
 		if err != nil {
-			fmt.Println(err)
 			return nil, err
 		}
 		if strings.TrimSpace(line) == "" {
@@ -91,12 +90,11 @@ func (httpMessage *Message) GetHeader(key string) string {
 }
 
 func (httpMessage *Message) SetBody(body string) *Message {
-	if httpMessage.Encoder != nil {
+	if httpMessage.Compressor != nil {
 		// TODO: Handle errors
-		encodedBody, _ := httpMessage.Encoder.Encode(body)
+		encodedBody, _ := httpMessage.Compressor.Compress(body)
 		httpMessage.Body = encodedBody
 	} else {
-		fmt.Println("Not Encoding body...")
 		httpMessage.Body = body
 	}
 	httpMessage.SetHeader("Content-Length", fmt.Sprintf("%v", len(httpMessage.Body)))
@@ -109,12 +107,12 @@ func (httpMessage *Message) SetStatus(status int) *Message {
 	return httpMessage
 }
 
-func (httpMessage *Message) SetEncoder(encoders string) *Message {
+func (httpMessage *Message) SetCompressor(encoders string) *Message {
 	encodersSlice := strings.Split(encoders, ",")
 	for _, encoder := range encodersSlice {
 		encoder = strings.TrimSpace(encoder)
-		if value, ok := Encoding[encoder]; ok {
-			httpMessage.Encoder = value
+		if value, ok := Algorithms[encoder]; ok {
+			httpMessage.Compressor = value
 			httpMessage.SetHeader("Content-Encoding", encoder)
 			break
 		}
