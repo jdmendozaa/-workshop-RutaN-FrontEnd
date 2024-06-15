@@ -102,10 +102,15 @@ func (httpMessage *Message) SetStatus(status int) *Message {
 	return httpMessage
 }
 
-func (httpMessage *Message) SetEncoder(encoder string) *Message {
-	if value, ok := Encoding[encoder]; ok {
-		httpMessage.Encoder = value
-		httpMessage.SetHeader("Content-Encoding", encoder)
+func (httpMessage *Message) SetEncoder(encoders string) *Message {
+	encodersSlice := strings.Split(encoders, ",")
+	for _, encoder := range encodersSlice {
+		encoder = strings.TrimSpace(encoder)
+		if value, ok := Encoding[encoder]; ok {
+			httpMessage.Encoder = value
+			httpMessage.SetHeader("Content-Encoding", encoder)
+			break
+		}
 	}
 	return httpMessage
 }
