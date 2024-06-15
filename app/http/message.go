@@ -17,6 +17,7 @@ type Message struct {
 	StatusText  string
 	Headers     map[string]string
 	Body        string
+	Encoder     Encoder
 }
 
 func Unmarshal(conn net.Conn) (*Message, error) {
@@ -85,6 +86,10 @@ func (httpMessage *Message) SetHeader(key, value string) *Message {
 	return httpMessage
 }
 
+func (httpMessage *Message) GetHeader(key string) string {
+	return httpMessage.Headers[key]
+}
+
 func (httpMessage *Message) SetBody(body string) *Message {
 	httpMessage.Body = body
 	httpMessage.SetHeader("Content-Length", fmt.Sprintf("%v", len(body)))
@@ -94,6 +99,14 @@ func (httpMessage *Message) SetBody(body string) *Message {
 func (httpMessage *Message) SetStatus(status int) *Message {
 	httpMessage.StatusCode = status
 	httpMessage.StatusText = StatusCode[status]
+	return httpMessage
+}
+
+func (httpMessage *Message) SetEncoder(encoder string) *Message {
+	if value, ok := Encoding[encoder]; ok {
+		httpMessage.Encoder = value
+		httpMessage.SetHeader("Content-Encoding", encoder)
+	}
 	return httpMessage
 }
 
